@@ -28,6 +28,10 @@ def run_classifierA_analysis(xgw, probs=False):
     Args:
         - xgw (dict):  input features (total mass in source frame, mass-weighted tidal deformability, mass ratio, effective inspiral spin)
         - probs (bool): if True, returns the porbability predicted for each class, if False returns only the most likely class (default False)
+
+    Returns:
+        - if probs=True: array of per-class probabilities as predicted by the classifier
+        - if probs=False: tuple (pbh, pns) - probability of prompt collapse to black hole and neutron star remnant respectively, summing over all the predictions
     """
 
     model_path = files("bns_remnant_classifier").joinpath("models", "classifierA_model.pkl")
@@ -65,6 +69,10 @@ def run_classifierB_analysis(xgw, probs=False):
     Args:
         - xgw (dict):  input features (total mass in source frame, mass-weighted tidal deformability, mass ratio, effective inspiral spin)
         - probs (bool): if True, returns the porbability predicted for each class, if False returns only the most likely class (default False)
+
+    Returns:
+        - if probs=True: array of per-class probabilities as predicted by the classifier
+        - if probs=False: tuple (pbh, phmns, plong) - probability prompt collapse to black hole, formation of  ahypermassive NS, or or a long-lived NS, respectively, summing over all the predictions
     """
 
     model_path = files("bns_remnant_classifier").joinpath("models", "classifierB_model.pkl")
@@ -98,6 +106,35 @@ def run_classifierB_analysis(xgw, probs=False):
 
 def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute_lambdas=False):
 
+    """
+    Reads a posterior-samples JSON file and assembles the feature set needed
+    as classifier input, deriving any missing mass, spin, or tidal
+    quantities from what is available. If compute_lambdas=True, it marginalizes lambdas over a set of EoS.
+
+    Args:
+        - posfile (str): path to a JSON file with posterior samples. Must contain
+          either 'total_mass_source' and 'mass_ratio', or 'mass_1_source' and
+          'mass_2_source', or 'chirp_mass_source' and 'mass_ratio'; and either
+          'chi_eff', or 'chi_1' and 'chi_2'.
+        - eos_dir (str, optional): path to directory with EoS files. Required if
+          compute_lambdas is True.
+        - eos_prob (str, optional): path to file with EoS posterior probabilities.
+          Required if compute_lambdas is True.
+        - num_eos (int or 'all', optional): number of EoS to marginalize over
+          (see lambdas_from_eos). Required if compute_lambdas is True.
+        - compute_lambdas (bool): if True, lambda_tilde is marginalized over the
+          EoS set via lambdas_from_eos. If False, lambda_tilde is instead read
+          directly from posfile (either as 'lambda_tilde', or computed from
+          'lambda_1'/'lambda_2') (default False).
+
+    Returns:
+        - dict with keys 'Mtot', 'LambdaTilde', 'ChiEff', 'Mratio_fixed', ready
+          to be used as classifier input.
+
+    Raises:
+        - ValueError if required mass, spin, or tidal information is missing
+          from posfile.
+    """
 
     with open(posfile, 'r') as file:
             pos_event = json.load(file)
@@ -158,6 +195,44 @@ def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute
 
 def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, pos_marginalization=False, eosweights=None, eosdir=None, count='all', lamweight=None):
 
+    """
+    Runs ClassifierA and/or ClassifierB to predict the remnant of a BNS merger,
+    either from posterior samples or from a low-latency point estimate.
+
+    Args:
+        - classifiers (str): which classifier(s) to run - any combination of
+          "A" and "B" (e.g. "A", "B", "AB") (default "A").
+        - analysis (str): "pos" to analyse posterior samples, or "lowlat" to
+          analyse a low-latency point estimate (default "pos").
+        - par_file (str): path to the input file - a posterior-samples JSON
+          for analysis="pos", or a low-latency point-estimate JSON for
+          analysis="lowlat".
+        - pos_marginalization (bool): for analysis="pos" only - if True,
+          lambda_tilde is marginalized over a set of EoS instead of being
+          read directly from par_file (default False).
+        - eosweights (str, optional): path to the EoS posterior-probability
+          file. If not provided, falls back to the bundled default
+          (eos_pos_setA.txt).
+        - eosdir (str, optional): path to the directory of EoS files. If not
+          provided, falls back to the bundled default (MRL_default).
+        - count (int or 'all'): number of EoS to marginalize over, passed
+          through to the EoS marginalization functions (default 'all', i.e.
+          every EoS available in eosdir).
+        - lamweight (str): required for analysis="lowlat" - "lambda" to
+          weight lambda_tilde by EoS probability before classification, or
+          "prediction" to classify per-EoS and weight the resulting
+          probabilities.
+
+    Returns:
+        - tuple (probs_remn_a, probs_remn_b):
+            - probs_remn_a: [p_bh, p_ns] from ClassifierA, or None if "A" not in classifiers
+            - probs_remn_b: [p_bh, p_hmns, p_long] from ClassifierB, or None if "B" not in classifiers
+
+    Raises:
+        - ValueError if analysis is not "pos" or "lowlat", if lamweight is
+          invalid for analysis="lowlat", or if EoS marginalization is
+          requested without the required files.
+    """
     logging.info(f"Running classifier {classifiers}")
 
     if analysis == 'lowlat':
@@ -174,9 +249,6 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
 
         if lamweight != 'lambda' and lamweight != 'prediction':
             raise ValueError(f'lamweight "{lamweight}" is not a valid entry. Options are "lambda" to weight lambda tilde or "prediction" to weight the classifier predictions')
-
-        folder = Path(eosdir)
-        count = len(list(folder.glob("*.dat")))
 
         total_mass, mass_ratio, effective_spin, lamT_and_weights = compute_low_lat_params(par_file, eosdir, eosweights, count)
 

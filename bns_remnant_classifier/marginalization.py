@@ -47,7 +47,8 @@ def lambdas_from_eos(eos_dir, eos_prob, num_eos, mass1_pos, mass2_pos):
     Args:
         - eos_dir (str): path to direcotry with the EoS files
         - eos_prob (str): path to file with posterior probabilities of the employed EoS state
-        - num_eos (int): number of EoSs we want to marginalize over. The needed threshold on likelihood is computed consequently
+        - num_eos (int or 'all'): number of EoSs we want to marginalize over; the needed threshold on likelihood is computed consequently.
+            If 'all', all the EoS available in MRL_default are used
         - mass1_pos (list): mass1 posterior samples
         - mass2_pos (list): mass2 posterior samples
 
@@ -128,7 +129,8 @@ def compute_low_lat_params(lowlat_file, eos_dir, eos_prob, num_eos):
         - lowlat_file (str): path to file with low-latency point estimates of masses and spins, and distance estimate
         - eos_dir (str): path to direcotry with the EoS files
         - eos_prob (str): path to file with posterior probabilities of the employed EoS state
-        - num_eos (int): number of EoSs in the set
+        - num_eos (int or 'all'): number of EoSs we want to marginalize over; the needed threshold on likelihood is computed consequently.
+            If 'all', all the EoS available in MRL_default are used
 
     Returns:
         - total mass in source frame in units of solar masses (float) 
