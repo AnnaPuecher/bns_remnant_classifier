@@ -1,0 +1,16 @@
+We consider a set of 10^5 equations of state from Koehn et al., Phys.Rev.X 15 (2025).
+
+For each equation of state, a *.dat file with a table with radius, mass, lambda, central pressure is provided in the MRL directory, where each equation of state is characterized by an index. These data are also availble upon request to the authors of Phys.Rev.X 15 (2025).
+
+The 'eos_ns_properties' directory contains also files with the equations of state posterior probabilities as inferred from the combination of different observations:
+
+"eos_pos_setA.txt"
+constraints from chiral EFT, pQCD, heavy pulsars, NICER observations, and GW170817
+
+"eos_pos_setB.txt"
+constraints from heavy-ion collisions, qLMXBs, black widow measurements, GW170817+AT2017gfo, GW170817+AT2017gfo+GRB180817A
+
+"eos_pos_setC.txt"
+constraints from PREX, CREX, lead dipole, Burster and HESS measurements, GW190425, GRB211211A, GW170817 postmerger
+
+More information about the construction of the equations of state, the constraints considered, and how the analysis to infer the posterior probabilities is performed, can be found in Koehn et al., Phys.Rev.X 15 (2025).
