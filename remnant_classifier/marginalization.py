@@ -1,9 +1,15 @@
+"""
+Module to handle marginalization over equations of state both in the case 
+of analysis of posterior samples and low-latency estimates
+"""
+
 import numpy as np
 import os
 from scipy.interpolate import interp1d
 import bilby
 from tqdm import tqdm
 import json
+from .logging import logger
 
 def compute_threshold(eos_probs, n_wanted_eos):
 
@@ -46,13 +52,16 @@ def lambdas_from_eos(eos_dir, eos_prob, num_eos, mass1_pos, mass2_pos):
     mass2_pos = np.asarray(mass2_pos)
     n_masses = len(mass1_pos)
 
-    eosids = np.where(eos_pos[:num_eos - 1] > lik_threshold)[0] + 1
-
+    eosids = np.where(eos_pos >= lik_threshold)[0] + 1
+    if len(eosids) > n_wanted_eos:
+        logger.warning(
+            "%d EoS selected for marginalization instead of the wanted %d due to ties at threshold",
+            len(eosids), n_wanted_eos)
     lamT_weights = []
 
     for eosid in tqdm(eosids):
-        posprob = eos_pos[eosid - 1]
 
+        posprob = eos_pos[eosid - 1]  
         eos_file = os.path.join(eos_dir, '%i.dat' % eosid)
         _, mass_eos, lam_eos, _ = np.loadtxt(eos_file, skiprows=1, unpack=True)
         mtov = mass_eos.max()

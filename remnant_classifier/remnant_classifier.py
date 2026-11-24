@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 from .marginalization import lambdas_from_eos, compute_low_lat_params
 from importlib.resources import files
+from .logging import logger
 
 def run_classifierA_analysis(xgw, probs=False):
 
@@ -32,12 +33,10 @@ def run_classifierA_analysis(xgw, probs=False):
     model_path = files("remnant_classifier").joinpath("models", "classifierA_model.pkl")
     with model_path.open("rb") as f:
         modelA = joblib.load(f)
-    #modelA = joblib.load('models/classifierA_model.pkl')
+    
     scaler_path = files("remnant_classifier").joinpath("models", "scaler_classifierA.pkl")
     with scaler_path.open("rb") as f:
         scalerA = joblib.load(f)
-
-    #scalerA = joblib.load('models/scaler_classifierA.pkl')
 
     xgw_sc = scalerA.transform(xgw)
 
@@ -75,9 +74,6 @@ def run_classifierB_analysis(xgw, probs=False):
     scaler_path = files("remnant_classifier").joinpath("models", "scaler_classifierB.pkl")
     with scaler_path.open("rb") as f:
         scalerB = joblib.load(f)
-
-    #modelB = joblib.load('models/classifierB_model.pkl')
-    #scalerB = joblib.load('models/scaler_classifierB.pkl')
 
     xgw_sc = scalerB.transform(xgw)
 
@@ -225,7 +221,10 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
                 prob_ns /= prob_tot
                 prob_pca /= prob_tot
 
-                probs_remn = [prob_pca, prob_ns]
+                probs_remn_a = [prob_pca, prob_ns]\
+
+            else:
+                probs_remn_a=None
 
             if "B" in classifiers:
 
@@ -245,7 +244,10 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
                 prob_hmns /= prob_tot
                 prob_long /= prob_tot
 
-                probs_remn = [prob_pcb, prob_hmns, prob_long]
+                probs_remn_b = [prob_pcb, prob_hmns, prob_long]
+
+            else:
+                probs_remn_b = None
 
     elif analysis == 'pos':
 
@@ -267,18 +269,21 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
         if "A" in classifiers:
 
             prob_pca, prob_ns = run_classifierA_analysis(data_x)
-            probs_remn = [prob_pca, prob_ns]
+            probs_remn_a = [prob_pca, prob_ns]
+        else:
+            probs_remn_a=None
 
         if "B" in classifiers:
 
             prob_pcb, prob_hmns, prob_long = run_classifierB_analysis(data_x)
             probs_remn = [prob_pcb, prob_hmns, prob_long]
-
+        else:
+            probs_remn_b=None
 
     else:
         raise ValueError(f'Analysis "{analysis}" is not a valid entry. Options are "pos" for posteriors and "lowlat" for low-latency')
 
 
-    return probs_remn
+    return probs_remn_a, probs_remn_b
 
 
