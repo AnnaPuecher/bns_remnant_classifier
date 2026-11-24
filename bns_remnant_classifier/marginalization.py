@@ -5,6 +5,7 @@ of analysis of posterior samples and low-latency estimates
 
 import numpy as np
 import os
+import glob
 from scipy.interpolate import interp1d
 import bilby
 from tqdm import tqdm
@@ -27,6 +28,16 @@ def compute_threshold(eos_probs, n_wanted_eos):
     sorted_vals = np.sort(eos_probs)[::-1]
     return sorted_vals[n_wanted_eos - 1]
 
+def get_available_eos_ids(eos_dir):
+    """
+    Return the sorted array of EoS ids that have a '<id>.dat' file
+    present in eos_dir.
+    """
+    ids = []
+    for path in glob.glob(os.path.join(eos_dir, "*.dat")):
+        name = os.path.splitext(os.path.basename(path))[0]
+        ids.append(int(name))
+    return np.array(sorted(ids))
 
 def lambdas_from_eos(eos_dir, eos_prob, num_eos, mass1_pos, mass2_pos):
 
@@ -48,7 +59,7 @@ def lambdas_from_eos(eos_dir, eos_prob, num_eos, mass1_pos, mass2_pos):
     eos_pos = np.loadtxt(eos_prob, skiprows=1, unpack=True)
     
     if num_eos == 'all':
-        eosids = np.arange(1, len(eos_pos) + 1)
+        eosids = get_available_eos_ids(eos_dir)
     else:
         lik_threshold = compute_threshold(eos_pos, num_eos)
         eosids = np.where(eos_pos >= lik_threshold)[0] + 1
@@ -149,7 +160,7 @@ def compute_low_lat_params(lowlat_file, eos_dir, eos_prob, num_eos):
     eos_pos = np.loadtxt(eos_prob, skiprows=1, unpack=True)
    
     if num_eos == 'all':
-        eosids = np.arange(1, len(eos_pos) + 1)
+        eosids = get_available_eos_ids(eos_dir)
     else:
         lik_threshold = compute_threshold(eos_pos, num_eos)
         eosids = np.where(eos_pos >= lik_threshold)[0] + 1

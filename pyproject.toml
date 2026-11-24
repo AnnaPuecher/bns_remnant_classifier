@@ -9,7 +9,6 @@ authors = [
     {name = "Anna Puecher", email = "anna.puecher@ligo.org"}]
 keywords = ["gravitational waves", "neutron stars", "remnants", "classifier"]
 classifiers = [
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
 ]
