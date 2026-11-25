@@ -9,3 +9,4 @@ venv/
 .venv/
 .pytest_cache/
 .coverage
+docs/_build/
