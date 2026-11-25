@@ -17,14 +17,14 @@ dependencies = [
     "scipy",
     "pandas",
     "joblib",
-    "scikit-learn==1.4.0",
+    "scikit-learn>=1.4.0,<=1.5.2",
     "bilby",
     "astropy",
     "tqdm"
 ]
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.package-data]

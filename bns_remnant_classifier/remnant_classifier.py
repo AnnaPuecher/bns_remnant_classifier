@@ -139,7 +139,7 @@ def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute
     with open(posfile, 'r') as file:
             pos_event = json.load(file)
 
-    logging.info("Successfully read posteriors input file.")
+    logger.info("Successfully read posteriors input file.")
 
     data_keys = pos_event.keys()
 
@@ -233,19 +233,19 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
           invalid for analysis="lowlat", or if EoS marginalization is
           requested without the required files.
     """
-    logging.info(f"Running classifier {classifiers}")
+    logger.info(f"Running classifier {classifiers}")
 
     if analysis == 'lowlat':
 
-        logging.info("Running on LOW-LATENCY data")
-        logging.info(f"EOS marginalization weighting over {lamweight}")
+        logger.info("Running on LOW-LATENCY data")
+        logger.info(f"EOS marginalization weighting over {lamweight}")
 
         if not eosdir:
             eosdir = str(DEFAULT_EOS_DIR)
-            logging.warning("No EoS data provided, reverting to default 'MRL_default'")
+            logger.warning("No EoS data provided, reverting to default 'MRL_default'")
         if not eosweights:
             eosweights = str(DEFAULT_EOS_PROB)
-            logging.warning("No EoS posteriors file provided, reverting to default 'eos_pos_setA.txt'")
+            logger.warning("No EoS posteriors file provided, reverting to default 'eos_pos_setA.txt'")
 
         if lamweight != 'lambda' and lamweight != 'prediction':
             raise ValueError(f'lamweight "{lamweight}" is not a valid entry. Options are "lambda" to weight lambda tilde or "prediction" to weight the classifier predictions')
@@ -338,16 +338,16 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
 
     elif analysis == 'pos':
 
-        logging.info("Running on POSTERIORS data")
+        logger.info("Running on POSTERIORS data")
         
         if pos_marginalization:
 
             if not eosdir:
                 eosdir = str(DEFAULT_EOS_DIR)
-                logging.warning("EoS marginalization requested but no EoS data provided, reverting to default 'MRL_default'")
+                logger.warning("EoS marginalization requested but no EoS data provided, reverting to default 'MRL_default'")
             if not eosweights:
                 eosweights = str(DEFAULT_EOS_PROB)
-                logging.warning("EoS marginalization requested but no EoS posteriors file provided, reverting to default 'eos_pos_setA.txt'")
+                logger.warning("EoS marginalization requested but no EoS posteriors file provided, reverting to default 'eos_pos_setA.txt'")
        
             pos_event = prepare_pos_data(par_file, eosdir, eosweights, count, compute_lambdas=True)
 
