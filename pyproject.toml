@@ -34,6 +34,9 @@ bns_remnant_classifier = [
 	"eos_ns_properties_default/MRL_default/*.dat"
 ]
 
+[tool.setuptools.packages.find]
+include = ["bns_remnant_classifier*"]
+
 [project.urls]
 Repository = "https://github.com/AnnaPuecher/bns_remnant_classifier"
 

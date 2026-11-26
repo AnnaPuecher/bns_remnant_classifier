@@ -104,7 +104,7 @@ def run_classifierB_analysis(xgw, probs=False):
         return pbh, phmns, plong
 
 
-def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute_lambdas=False):
+def prepare_pos_data(posfile, is_bilby_pos=True, eos_dir=None, eos_prob=None, num_eos=None, compute_lambdas=False):
 
     """
     Reads a posterior-samples JSON file and assembles the feature set needed
@@ -116,6 +116,9 @@ def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute
           either 'total_mass_source' and 'mass_ratio', or 'mass_1_source' and
           'mass_2_source', or 'chirp_mass_source' and 'mass_ratio'; and either
           'chi_eff', or 'chi_1' and 'chi_2'.
+        - is_bilby_pos (bool): if True (deafult), it assumes that the supplied posterior 
+          file is the result of a bilby run, it is loaded via the bilby read_in_result 
+          function, otherwise as a standard *json file.
         - eos_dir (str, optional): path to directory with EoS files. Required if
           compute_lambdas is True.
         - eos_prob (str, optional): path to file with EoS posterior probabilities.
@@ -136,13 +139,16 @@ def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute
           from posfile.
     """
 
-    with open(posfile, 'r') as file:
+    if is_bilby_pos:
+        pos_event = bilby.core.result.read_in_result(posfile).posterior
+    else:
+        with open(posfile, 'r') as file:
             pos_event = json.load(file)
 
     logger.info("Successfully read posteriors input file.")
 
     data_keys = pos_event.keys()
-
+    
     if "total_mass_source" not in data_keys:
         if "mass_1_source" in data_keys and "mass_2_source" in data_keys:
             pos_event["total_mass_source"] = pos_event["mass_1_source"] + pos_event["mass_2_source"]
@@ -173,7 +179,7 @@ def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute
         else:
             m1, m2 = bilby.gw.conversion.total_mass_and_mass_ratio_to_component_masses(np.array(pos_event["mass_ratio"]), np.array(pos_event["total_mass_source"]))
 
-            pos_event['lambda_tilde'] = lambdas_from_eos(eos_dir, eos_prob, num_eos, m1, m2)
+        pos_event['lambda_tilde'] = lambdas_from_eos(eos_dir, eos_prob, num_eos, m1, m2)
 
     else:
         if "lambda_tilde" not in data_keys:
@@ -193,7 +199,7 @@ def prepare_pos_data(posfile, eos_dir=None, eos_prob=None, num_eos=None, compute
     return data_pos
 
 
-def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, pos_marginalization=False, eosweights=None, eosdir=None, count='all', lamweight=None):
+def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, is_bilby_pos=True, pos_marginalization=False, eosweights=None, eosdir=None, count='all', lamweight=None):
 
     """
     Runs ClassifierA and/or ClassifierB to predict the remnant of a BNS merger,
@@ -349,10 +355,10 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, po
                 eosweights = str(DEFAULT_EOS_PROB)
                 logger.warning("EoS marginalization requested but no EoS posteriors file provided, reverting to default 'eos_pos_setA.txt'")
        
-            pos_event = prepare_pos_data(par_file, eosdir, eosweights, count, compute_lambdas=True)
+            pos_event = prepare_pos_data(par_file, is_bilby_pos, eosdir, eosweights, count, compute_lambdas=True)
 
         else:
-            pos_event = prepare_pos_data(par_file)
+            pos_event = prepare_pos_data(par_file, is_bilby_pos)
 
         data_x = pd.DataFrame(pos_event)
 
