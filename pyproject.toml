@@ -1,6 +1,6 @@
 [project]
 name = "bns_remnant_classifier"
-version = "1.0.0"
+version = "1.0.1"
 description = "Classifier for predicting the remnant of binary neutron star mergers from inspiral parameters posteriors and low-latency gravitational-wave data"
 requires-python = ">=3.12"
 readme = "README.md"
