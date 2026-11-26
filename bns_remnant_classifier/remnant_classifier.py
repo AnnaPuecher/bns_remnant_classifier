@@ -213,6 +213,9 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, is
         - par_file (str): path to the input file - a posterior-samples JSON
           for analysis="pos", or a low-latency point-estimate JSON for
           analysis="lowlat".
+        - is_bilby_pos (bool): if True (deafult), it assumes that the supplied posterior
+          file is the result of a bilby run, it is loaded via the bilby read_in_result
+          function, otherwise as a standard *json file.
         - pos_marginalization (bool): for analysis="pos" only - if True,
           lambda_tilde is marginalized over a set of EoS instead of being
           read directly from par_file (default False).
