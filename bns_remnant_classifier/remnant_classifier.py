@@ -112,13 +112,16 @@ def prepare_pos_data(posfile, is_bilby_pos=True, eos_dir=None, eos_prob=None, nu
     quantities from what is available. If compute_lambdas=True, it marginalizes lambdas over a set of EoS.
 
     Args:
-        - posfile (str): path to a JSON file with posterior samples. Must contain
+        - posfile (str or dict): path to a JSON file with posterior samples, or 
+          directly a dictionary containing the posterior samples - in that
+          case it is used as-is and is_bilby_pos is ignored. Must include
           either 'total_mass_source' and 'mass_ratio', or 'mass_1_source' and
           'mass_2_source', or 'chirp_mass_source' and 'mass_ratio'; and either
           'chi_eff', or 'chi_1' and 'chi_2'.
-        - is_bilby_pos (bool): if True (deafult), it assumes that the supplied posterior 
-          file is the result of a bilby run, it is loaded via the bilby read_in_result 
-          function, otherwise as a standard *json file.
+        - is_bilby_pos (bool): if True (deafult), it assumes that the supplied posterior
+          file is the result of a bilby run, it is loaded via the bilby read_in_result
+          function, otherwise as a standard *json file. Ignored if posfile is
+          already a dict.
         - eos_dir (str, optional): path to directory with EoS files. Required if
           compute_lambdas is True.
         - eos_prob (str, optional): path to file with EoS posterior probabilities.
@@ -139,13 +142,16 @@ def prepare_pos_data(posfile, is_bilby_pos=True, eos_dir=None, eos_prob=None, nu
           from posfile.
     """
 
-    if is_bilby_pos:
-        pos_event = bilby.core.result.read_in_result(posfile).posterior
+    if isinstance(posfile, dict):
+        pos_event = posfile
     else:
-        with open(posfile, 'r') as file:
-            pos_event = json.load(file)
+        if is_bilby_pos:
+            pos_event = bilby.core.result.read_in_result(posfile).posterior
+        else:
+            with open(posfile, 'r') as file:
+                pos_event = json.load(file)
 
-    logger.info("Successfully read posteriors input file.")
+    logger.info("Successfully loaded posteriors.")
 
     data_keys = pos_event.keys()
     
@@ -210,9 +216,10 @@ def compute_bns_remnant_probs(classifiers="A", analysis="pos", par_file=None, is
           "A" and "B" (e.g. "A", "B", "AB") (default "A").
         - analysis (str): "pos" to analyse posterior samples, or "lowlat" to
           analyse a low-latency point estimate (default "pos").
-        - par_file (str): path to the input file - a posterior-samples JSON
-          for analysis="pos", or a low-latency point-estimate JSON for
-          analysis="lowlat".
+        - par_file (str or dict): path to the input file - a posterior-samples
+          JSON for analysis="pos", or a low-latency point-estimate JSON for
+          analysis="lowlat". For analysis="pos", this can also be an
+          already-loaded dict of posterior samples in which case is_bilby_pos is ignored.
         - is_bilby_pos (bool): if True (deafult), it assumes that the supplied posterior
           file is the result of a bilby run, it is loaded via the bilby read_in_result
           function, otherwise as a standard *json file.
